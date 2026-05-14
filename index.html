@@ -310,6 +310,88 @@ input:focus, select:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgb
 .notes-card h4 { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); margin-bottom: 7px; }
 .notes-card strong { color: var(--off-white); font-weight: 500; }
 
+
+.save-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+.btn-save {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 13px 8px;
+  background: transparent;
+  border-radius: 4px;
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px;
+  letter-spacing: 2px; text-transform: uppercase; text-align: center;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s, border-color 0.15s;
+}
+.btn-save-pdf {
+  border: 1px solid rgba(201,168,76,0.35);
+  color: var(--gold);
+}
+.btn-save-pdf:active { background: var(--gold-dim); }
+.btn-save-copy {
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--mid);
+}
+.btn-save-copy:active { background: rgba(255,255,255,0.05); }
+.btn-save-wide {
+  grid-column: 1 / -1;
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--mid);
+}
+.btn-save-wide:active { background: rgba(255,255,255,0.04); }
+
+.toast {
+  position: fixed;
+  bottom: 28px; left: 50%; transform: translateX(-50%);
+  background: #1a1a1a; border: 1px solid var(--gold);
+  color: var(--gold);
+  font-family: 'Barlow Condensed', sans-serif; font-size: 12px;
+  letter-spacing: 2px; text-transform: uppercase;
+  padding: 10px 20px; border-radius: 4px;
+  opacity: 0; transition: opacity 0.3s;
+  pointer-events: none; z-index: 999;
+  white-space: nowrap;
+}
+.toast.show { opacity: 1; }
+
+.saved-banner {
+  background: rgba(201,168,76,0.08);
+  border: 1px solid rgba(201,168,76,0.2);
+  border-radius: 4px;
+  padding: 8px 14px;
+  margin-bottom: 4px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--gold); text-align: center;
+  display: none;
+}
+
+@media print {
+  header, #form-section, #loading, .save-actions, .btn-reset, footer { display: none !important; }
+  body { background: #fff !important; color: #000 !important; }
+  #output { display: block !important; }
+  .prog-header { background: #f0f0f0 !important; border: 1px solid #ccc !important; color: #000 !important; }
+  .prog-name, .prog-title, .prog-meta { color: #000 !important; }
+  .week-header { background: #e0e0e0 !important; color: #000 !important; }
+  .week-focus { color: #555 !important; }
+  .day-name { color: #8a6a1a !important; }
+  .session-title { color: #000 !important; }
+  .session-detail { color: #444 !important; }
+  .notes-card { border-left-color: #8a6a1a !important; background: #f8f8f8 !important; }
+  .notes-card h4 { color: #8a6a1a !important; }
+  .notes-card p { color: #333 !important; }
+  .form-card, .week-block { border: 1px solid #ccc !important; }
+  .badge-gym { background: #e8f0e0 !important; color: #3a6020 !important; border-color: #3a6020 !important; }
+  .badge-run { background: #fdf5e0 !important; color: #8a6a1a !important; border-color: #8a6a1a !important; }
+  .badge-swim { background: #e0ecf8 !important; color: #1a4a8a !important; border-color: #1a4a8a !important; }
+  .badge-bw  { background: #f8e0e0 !important; color: #8a1a1a !important; border-color: #8a1a1a !important; }
+  .badge-rest { background: #f0f0f0 !important; color: #888 !important; border-color: #bbb !important; }
+}
+
 .btn-reset {
   display: block; width: 100%; margin-top: 16px; padding: 14px;
   background: transparent; border: 1px solid rgba(201,168,76,0.22);
@@ -356,13 +438,13 @@ footer { text-align:center; padding:24px 20px; font-family:'Barlow Condensed',sa
           <input type="text" id="first-name" placeholder="e.g. James">
         </div>
         <div class="field">
-          <label>Rank</label>
+          <label>Service</label>
           <select id="rank">
             <option value="">Select</option>
-            <option>OCdt</option>
-            <option>FCdt</option>
-            <option>SCdt</option>
-            <option>WOCdt</option>
+            <option value="Army">Army</option>
+            <option value="RAAF">RAAF</option>
+            <option value="Navy">Navy</option>
+            <option value="ITO">ITO</option>
           </select>
         </div>
       </div>
@@ -444,9 +526,9 @@ footer { text-align:center; padding:24px 20px; font-family:'Barlow Condensed',sa
       <div class="field">
         <label>Program Duration</label>
         <div class="pill-group" id="duration">
-          <div class="pill" onclick="selectPill(this,'duration')" data-val="2 weeks">2<span>weeks</span></div>
-          <div class="pill" onclick="selectPill(this,'duration')" data-val="3 weeks">3<span>weeks</span></div>
-          <div class="pill" onclick="selectPill(this,'duration')" data-val="2.5 weeks">2.5<span>weeks</span></div>
+          <div class="pill" onclick="selectPill(this,'duration')" data-val="4 weeks">4<span>weeks</span></div>
+          <div class="pill" onclick="selectPill(this,'duration')" data-val="5 weeks">5<span>weeks</span></div>
+          <div class="pill" onclick="selectPill(this,'duration')" data-val="6 weeks">6<span>weeks</span></div>
         </div>
       </div>
 
@@ -492,9 +574,11 @@ footer { text-align:center; padding:24px 20px; font-family:'Barlow Condensed',sa
   </div>
 
   <!-- OUTPUT -->
+  <div class="saved-banner" id="saved-banner">↑ Your last program has been restored</div>
   <div id="output"></div>
 </main>
 
+<div class="toast" id="toast"></div>
 <footer>Alpha Squadron · ADFA · Colour Book Training Program</footer>
 
 <script>
@@ -553,7 +637,7 @@ function gather() {
 }
 function validate(d) {
   if (!d.firstName)         return 'Please enter your first name.';
-  if (!d.rank)              return 'Please select your rank.';
+  if (!d.rank)              return 'Please select your service.';
   if (!d.age)               return 'Please enter your age.';
   if (!d.sex)               return 'Please select your sex.';
   if (!d.fitness)           return 'Please select your fitness level.';
@@ -569,10 +653,10 @@ function validate(d) {
 function buildPrompt(d) {
   const mods = d.modalities.map(m => m.replace(/[^\w\s/]/g,'').trim()).join(', ');
   const inj  = d.injuries ? `Injuries/limitations: ${d.injuries}. Modify or avoid accordingly.` : 'No reported injuries.';
-  const wkCount = d.duration.includes('2.5') ? '3 (week 3 is a shorter half-week)' : d.duration.replace(' weeks','');
+  const wkCount = d.duration.replace(' weeks','');
   return `You are a military fitness coach writing a Colour Book training program for an ADFA officer cadet in Alpha Squadron.
 
-Trainee: ${d.rank} ${d.firstName}, Age ${d.age}, ${d.sex}.
+Trainee: ${d.firstName}, Service: ${d.rank}, Age ${d.age}, ${d.sex}.
 Fitness level: ${d.fitness}.
 Available modalities: ${mods}.
 Training days per week: ${d.daysPerWeek}.
@@ -609,7 +693,10 @@ Rules:
 - Each week must have exactly 7 day entries (Mon–Sun). Non-training days have type "rest".
 - Rest days: type="rest", sessionTitle="Rest & Recovery", detail="".
 - Be specific with training sessions — name every exercise, give sets×reps, distances, or times.
-- Progress intensity across weeks (week 1 lighter, later weeks harder).
+- Progress intensity across weeks — build load progressively. For longer programs use structured phases:
+  4 weeks: Foundation → Build → Intensity → Peak
+  5 weeks: Foundation → Build → Intensity → Peak → Taper/Consolidate
+  6 weeks: Foundation → Base Build → Strength/Aerobic Build → Intensity → Peak → Taper
 - Return ONLY the JSON object, nothing else.`;
 }
 
@@ -626,7 +713,7 @@ function renderProgram(data, d) {
     <div class="prog-header">
       <div class="prog-name">Alpha Squadron · ADFA · Colour Book Program</div>
       <div class="prog-title">${esc(data.programTitle)}</div>
-      <div class="prog-meta">${esc(d.rank)} ${esc(d.firstName)} &nbsp;·&nbsp; ${esc(d.duration)} &nbsp;·&nbsp; ${esc(d.daysPerWeek)} days/wk</div>
+      <div class="prog-meta">${esc(d.firstName)} · ${esc(d.rank)} &nbsp;·&nbsp; ${esc(d.duration)} &nbsp;·&nbsp; ${esc(d.daysPerWeek)} days/wk</div>
     </div>
     <div class="notes-card" style="border-left-color:#3a3a3a">
       <h4>Overview</h4>
@@ -663,6 +750,21 @@ function renderProgram(data, d) {
     <div class="notes-card"><h4>🍽 Nutrition</h4><p>${esc(data.nutritionNote)}</p></div>
     <div class="notes-card" style="border-left-color:#3a3a3a"><h4>😴 Recovery</h4><p>${esc(data.recoveryNote)}</p></div>
     <div class="notes-card" style="border-left-color:#1e1e1e"><h4>🐺 Alpha Out</h4><p>${esc(data.closingNote)}</p></div>
+
+    <div class="save-actions">
+      <button class="btn-save btn-save-pdf" onclick="printProgram()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Save PDF
+      </button>
+      <button class="btn-save btn-save-copy" onclick="copyProgram()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        Copy Text
+      </button>
+      <button class="btn-save btn-save-wide" onclick="saveToDevice()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Save to Device
+      </button>
+    </div>
     <button class="btn-reset" onclick="resetForm()">← Generate New Program</button>`;
   return h;
 }
@@ -683,7 +785,7 @@ async function generateProgram() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
+        max_tokens: 4000,
         messages: [{ role: 'user', content: buildPrompt(d) }]
       })
     });
@@ -708,6 +810,10 @@ async function generateProgram() {
     const out = document.getElementById('output');
     out.style.display = 'block';
     out.innerHTML = renderProgram(parsed, d);
+    // Auto-save to local storage
+    try {
+      localStorage.setItem('alpha_sqn_program', JSON.stringify({ program: parsed, trainee: d, savedAt: new Date().toISOString() }));
+    } catch(e) {}
 
   } catch(e) {
     stopLoading();
@@ -725,6 +831,107 @@ function resetForm() {
   out.style.display = 'none'; out.innerHTML = '';
   document.getElementById('loading').style.display = 'none';
 }
+
+// ─── Toast helper ────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+// ─── Print / Save as PDF ─────────────────────────
+function printProgram() {
+  window.print();
+}
+
+// ─── Copy as plain text ──────────────────────────
+function copyProgram() {
+  const out = document.getElementById('output');
+  if (!out) return;
+  // Walk the DOM and extract readable text
+  let text = '';
+  out.querySelectorAll('.prog-name, .prog-title, .prog-meta').forEach(el => {
+    text += el.textContent.trim() + '\n';
+  });
+  text += '\n';
+  out.querySelectorAll('.week-block').forEach(wk => {
+    const header = wk.querySelector('.week-header');
+    if (header) text += '\n' + header.textContent.trim().replace(/\s+/g,' ') + '\n' + '─'.repeat(30) + '\n';
+    wk.querySelectorAll('.day-row').forEach(row => {
+      const day = row.querySelector('.day-name')?.textContent.trim() || '';
+      const title = row.querySelector('.session-title')?.textContent.trim() || '';
+      const detail = row.querySelector('.session-detail')?.textContent.trim() || '';
+      text += `${day.padEnd(5)} ${title}\n`;
+      if (detail) text += detail.split('\n').map(l => '      ' + l.trim()).join('\n') + '\n';
+    });
+  });
+  out.querySelectorAll('.notes-card').forEach(card => {
+    const h = card.querySelector('h4')?.textContent.trim() || '';
+    const p = card.querySelector('p')?.textContent.trim() || '';
+    text += `\n${h}\n${p}\n`;
+  });
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('Copied to clipboard');
+  }).catch(() => {
+    showToast('Copy failed — try long-pressing');
+  });
+}
+
+// ─── Save JSON to device ─────────────────────────
+function saveToDevice() {
+  try {
+    const saved = localStorage.getItem('alpha_sqn_program');
+    if (!saved) { showToast('No program to save'); return; }
+    const blob = new Blob([saved], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'alpha-sqn-training-program.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Program saved to device');
+  } catch(e) {
+    showToast('Save failed');
+  }
+}
+
+// ─── Restore last program on page load ───────────
+window.addEventListener('DOMContentLoaded', () => {
+  try {
+    const saved = localStorage.getItem('alpha_sqn_program');
+    if (!saved) return;
+    const { program, trainee, savedAt } = JSON.parse(saved);
+    if (!program || !trainee) return;
+    const date = new Date(savedAt);
+    const dateStr = date.toLocaleDateString('en-AU', { day:'numeric', month:'short', year:'numeric' });
+    const banner = document.getElementById('saved-banner');
+    if (banner) {
+      banner.style.display = 'block';
+      banner.innerHTML = `Last program saved ${dateStr} — <span style="text-decoration:underline;cursor:pointer" onclick="restoreProgram()">Reload it</span> &nbsp;·&nbsp; <span style="cursor:pointer;color:var(--mid)" onclick="clearSaved()">Clear</span>`;
+    }
+  } catch(e) {}
+});
+
+function restoreProgram() {
+  try {
+    const saved = localStorage.getItem('alpha_sqn_program');
+    if (!saved) return;
+    const { program, trainee } = JSON.parse(saved);
+    document.getElementById('form-section').style.display = 'none';
+    document.getElementById('saved-banner').style.display = 'none';
+    const out = document.getElementById('output');
+    out.style.display = 'block';
+    out.innerHTML = renderProgram(program, trainee);
+  } catch(e) { showToast('Could not restore program'); }
+}
+
+function clearSaved() {
+  localStorage.removeItem('alpha_sqn_program');
+  document.getElementById('saved-banner').style.display = 'none';
+  showToast('Saved program cleared');
+}
+
 </script>
 </body>
 </html>
