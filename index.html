@@ -780,7 +780,7 @@ async function generateProgram() {
   startLoading();
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch('https://alpha-squadron-proxy.brendon-meredith3.workers.dev', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
