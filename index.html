@@ -272,13 +272,29 @@ input:focus, select:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgb
 
 .week-block { margin-top: 14px; border: 1px solid var(--border-s); border-radius: 6px; overflow: hidden; }
 .week-header {
-  background: #0a0a0a; padding: 10px 16px;
+  background: #0a0a0a; padding: 12px 16px;
   font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
   font-size: 12px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold);
   display: flex; align-items: center; gap: 8px;
   border-bottom: 1px solid rgba(201,168,76,0.1);
+  cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent;
 }
+.week-header:active { background: #111; }
+.week-chevron {
+  margin-left: auto; flex-shrink: 0;
+  transition: transform 0.25s ease;
+  color: var(--gold); opacity: 0.6;
+}
+.week-block.collapsed .week-chevron { transform: rotate(-90deg); }
+.week-body { overflow: hidden; transition: max-height 0.3s ease; }
+.week-block.collapsed .week-body { max-height: 0 !important; }
 .week-focus { font-weight: 400; font-size: 11px; color: var(--mid); letter-spacing: 1px; text-transform: none; }
+
+/* Print: expand all weeks */
+@media print {
+  .week-body { max-height: none !important; }
+  .week-chevron { display: none; }
+}
 
 .day-row {
   padding: 12px 16px;
@@ -697,7 +713,8 @@ Rules:
   4 weeks: Foundation → Build → Intensity → Peak
   5 weeks: Foundation → Build → Intensity → Peak → Taper/Consolidate
   6 weeks: Foundation → Base Build → Strength/Aerobic Build → Intensity → Peak → Taper
-- Return ONLY the JSON object, nothing else.`;
+- Return ONLY the JSON object, nothing else.
+- Use Australian/British English spelling throughout (e.g. prioritise not prioritize, maximise not maximize, programme not program for non-fitness contexts).`;
 }
 
 // ─── Render ─────────────────────────────────────
@@ -721,12 +738,15 @@ function renderProgram(data, d) {
     </div>`;
 
   for (const wk of data.weeks) {
-    h += `<div class="week-block">
-      <div class="week-header">
+    const isFirst = wk.weekNumber === 1;
+    h += `<div class="week-block${isFirst ? '' : ' collapsed'}" id="week-${wk.weekNumber}">
+      <div class="week-header" onclick="toggleWeek(${wk.weekNumber})">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
         WEEK ${wk.weekNumber}
         <span class="week-focus">— ${esc(wk.focus)}</span>
-      </div>`;
+        <svg class="week-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="week-body" style="max-height:${isFirst ? '2000px' : '0'}">`;
 
     for (const day of wk.days) {
       const badge  = badgeMap[day.type] || 'badge-rest';
@@ -743,7 +763,7 @@ function renderProgram(data, d) {
         </div>
       </div>`;
     }
-    h += `</div>`;
+    h += `</div></div>`;
   }
 
   h += `
@@ -784,7 +804,7 @@ async function generateProgram() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-5',
+        model: 'claude-sonnet-4-5-20250929',
         max_tokens: 4000,
         messages: [{ role: 'user', content: buildPrompt(d) }]
       })
@@ -825,6 +845,21 @@ async function generateProgram() {
     const out = document.getElementById('output');
     out.style.display = 'block';
     out.innerHTML = `<div class="error-box"><strong>Error generating program.</strong><br>${esc(e.message)}<br><br>Check your connection and try again.</div><button class="btn-reset" onclick="resetForm()">← Try Again</button>`;
+  }
+}
+
+// ─── Toggle week collapse ────────────────────────
+function toggleWeek(num) {
+  const block = document.getElementById('week-' + num);
+  if (!block) return;
+  const body = block.querySelector('.week-body');
+  const isCollapsed = block.classList.contains('collapsed');
+  if (isCollapsed) {
+    block.classList.remove('collapsed');
+    body.style.maxHeight = '3000px';
+  } else {
+    block.classList.add('collapsed');
+    body.style.maxHeight = '0';
   }
 }
 
@@ -882,16 +917,43 @@ function copyProgram() {
   });
 }
 
-// ─── Save JSON to device ─────────────────────────
+// ─── Save to device as readable HTML ────────────
 function saveToDevice() {
   try {
-    const saved = localStorage.getItem('alpha_sqn_program');
-    if (!saved) { showToast('No program to save'); return; }
-    const blob = new Blob([saved], { type: 'application/json' });
+    const out = document.getElementById('output');
+    if (!out || !out.innerHTML.trim()) { showToast('No program to save'); return; }
+
+    // Build a standalone HTML file with the program content
+    const styles = `
+      body { background:#050505; color:#ede9de; font-family:Arial,sans-serif; max-width:700px; margin:0 auto; padding:20px; }
+      h1 { color:#c9a84c; font-size:28px; letter-spacing:2px; text-transform:uppercase; margin-bottom:4px; }
+      h2 { color:#c9a84c; font-size:13px; letter-spacing:3px; text-transform:uppercase; margin:20px 0 8px; }
+      .prog-header { background:#000; border:1px solid rgba(201,168,76,0.3); border-radius:6px; padding:20px; text-align:center; margin-bottom:16px; }
+      .prog-name { color:#c9a84c; font-size:11px; letter-spacing:4px; text-transform:uppercase; margin-bottom:4px; }
+      .prog-title { font-size:26px; letter-spacing:2px; text-transform:uppercase; color:#fff; }
+      .prog-meta { color:#686868; font-size:12px; margin-top:8px; }
+      .week-block { border:1px solid rgba(255,255,255,0.05); border-radius:6px; margin-bottom:14px; overflow:hidden; }
+      .week-header { background:#0a0a0a; padding:10px 16px; color:#c9a84c; font-size:12px; letter-spacing:3px; text-transform:uppercase; }
+      .day-row { padding:10px 16px; border-bottom:1px solid rgba(255,255,255,0.03); display:grid; grid-template-columns:52px 1fr; gap:12px; }
+      .day-row:nth-child(even){ background:rgba(255,255,255,0.02); }
+      .day-name { color:#c9a84c; font-size:12px; font-weight:bold; letter-spacing:2px; text-transform:uppercase; }
+      .session-title { font-size:14px; font-weight:bold; margin-bottom:3px; }
+      .session-detail { font-size:12px; color:#686868; line-height:1.5; }
+      .type-badge { display:inline-block; font-size:9px; font-weight:bold; letter-spacing:1px; text-transform:uppercase; padding:2px 7px; border-radius:2px; margin-bottom:4px; background:rgba(201,168,76,0.1); color:#c9a84c; border:1px solid rgba(201,168,76,0.3); }
+      .notes-card { background:#0e0e0e; border:1px solid rgba(255,255,255,0.05); border-left:3px solid #c9a84c; border-radius:6px; padding:14px 16px; margin-top:12px; }
+      .notes-card h4 { color:#c9a84c; font-size:10px; letter-spacing:3px; text-transform:uppercase; margin-bottom:7px; }
+      .notes-card p { color:#686868; font-size:13px; line-height:1.6; }
+      .week-body { display:block !important; max-height:none !important; }
+      .week-chevron, .save-actions, .btn-reset { display:none; }
+    `;
+
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Alpha Squadron Training Program</title><style>${styles}</style></head><body>${out.innerHTML}</body></html>`;
+
+    const blob = new Blob([html], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'alpha-sqn-training-program.json';
+    a.download = 'alpha-sqn-training-program.html';
     a.click();
     URL.revokeObjectURL(url);
     showToast('Program saved to device');
